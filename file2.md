@@ -4,7 +4,7 @@ Absolutely. Let's break down **why you're forking the repository** and then walk
 
 Suppose the course repository is:
 
-[devops-directive-github-actions-course repository](https://github.com/sidpalas/devops-directive-github-actions-course?utm_source=chatgpt.com)
+[devops-directive-github-actions-course repository](https://github.com/sidpalas/devops-directive-github-actions-course)
 
 You **don't own** that repository.
 
@@ -50,7 +50,7 @@ For a GitHub Actions course, this is extremely important because many exercises 
 
 Go to:
 
-[Course Repository](https://github.com/sidpalas/devops-directive-github-actions-course?utm_source=chatgpt.com)
+[Course Repository](https://github.com/sidpalas/devops-directive-github-actions-course)
 
 Click:
 
