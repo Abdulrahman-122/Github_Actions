@@ -121,9 +121,10 @@ Since you're on Arch Linux (from previous discussions), install it using the off
 
 The install guide is here:
 
-[Devbox Installation Guide]([https://www.jetify.com/docs/devbox/installing_devbox/?utm_source=chatgpt.com](https://www.jetify.com/docs/devbox/installing-devbox#macos))
+[Devbox Installation Guide]
+([https://www.jetify.com/docs/devbox/installing_devbox/?utm_source=chatgpt.com](https://www.jetify.com/docs/devbox/installing-devbox#macos))
 
-https://github.com/jetify-com/devbox]
+https://github.com/jetify-com/devbox
 
 Verify:
 
