@@ -524,6 +524,43 @@ Output:
 ```
 
 ---
+To_Sum_up
+```yaml
+name: understand_context
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  context:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.gen.outputs.version }}
+    steps:
+      - name: check
+        id: gen
+        run: |
+          echo "Actor: ${{ github.actor }}"
+          echo "Repo: ${{ github.repository }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "version=1.0.0">> $GITHUB_OUTPUT
+
+  check_branch:
+    runs-on: ubuntu-latest
+    env:
+     Project: Full_stack
+    needs:
+      - context
+    steps:
+       - name: check_branch
+         run: |
+          echo "Branch is "
+          echo ${{ github.ref }}
+          echo " $Project "
+          echo "${{env.Project}}"
+          echo "The version of the first job is ${{ needs.context.outputs.version}}"
+
+
+```
 
 # Final Challenge
 
