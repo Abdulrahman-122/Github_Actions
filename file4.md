@@ -410,45 +410,41 @@ Received version:
 Create:
 
 ```yaml
-name: ENV vs OUTPUT
-
+name: Check_Output_of_github
 on:
   workflow_dispatch:
-
+  push:
+   branches:
+    - main
 jobs:
-
-  producer:
-
+  backend:
     runs-on: ubuntu-latest
-
     outputs:
       version: ${{ steps.gen.outputs.version }}
-
     steps:
-
-      - id: gen
+      - name: apis
+        id: gen
         run: |
+         Version=7.1.0
+         echo "version=$Version" >> $GITHUB_ENV
+         echo "version=$Version" >> $GITHUB_OUTPUT
+      - name: check_apis
+        run: |
+          echo "${{ steps.gen.outputs.version }}"
+      # note ; to see the outputs you must define two steps one for  generation + other for varification as this is how github works but not the same at a time
 
-          VERSION=3.0.0
-
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-  consumer:
-
+  Frontend:
     runs-on: ubuntu-latest
-
-    needs: producer
-
+    needs:
+     - backend
     steps:
+      - name: check_versions_of_last_job
+        run: |
+          echo "let's check version using environment variable(will not give you any value)"
+          echo $Version
+          echo "Let's check version of last job using outputs.version"
+          echo " ${{ needs.backend.outputs.version }} "
 
-      - run: |
-          echo "ENV variable:"
-          echo "${VERSION:-NOT_FOUND}"
-
-          echo "Output variable:"
-          echo "${{ needs.producer.outputs.version }}"
 ```
 
 ---
