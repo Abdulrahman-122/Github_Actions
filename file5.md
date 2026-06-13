@@ -534,14 +534,4 @@ Create a workflow that prints:
 3. Repository secret `API_KEY`
 4. Version output from a previous job
 
-If you can make all four appear correctly (with the secret masked as `***`), you've understood:
 
-```text
-secrets
-variables
-environments
-contexts
-outputs
-```
-
-which are some of the most important GitHub Actions concepts used in real CI/CD pipelines.
