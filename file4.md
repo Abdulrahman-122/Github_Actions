@@ -314,47 +314,50 @@ Create:
 ```
 
 ```yaml
-name: GITHUB_OUTPUT Lab
-
+name: Github_output_check
 on:
-  workflow_dispatch:
+  workflow_dispatch: 
 
 jobs:
-
-  producer:
-
+  Producer:
     runs-on: ubuntu-latest
-
     outputs:
       version: ${{ steps.generate.outputs.version }}
-
+      # this will give me empty output version
     steps:
-
-      - name: Generate Version
-        id: generate
-
+     - name: Generate_output
+       id: generate
+       run: |
+        VERSION=2.0.4
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+     -  name: Varify
         run: |
-          VERSION=2.1.5
-
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Verify
-        run: |
-          echo "Version inside producer:"
-          echo "${{ steps.generate.outputs.version }}"
-
-  consumer:
-
+          echo "Version inside Producer:"
+          echo "${{steps.generate.outputs.version}}"
+          # this will generate the same version 
+  Consumer:
     runs-on: ubuntu-latest
-
-    needs: producer
-
+    outputs:
+      version: ${{ steps.Read.outputs.version }}
     steps:
-
-      - name: Read Output
-        run: |
-          echo "Received version:"
-          echo "${{ needs.producer.outputs.version }}"
+     - name: Read output
+       id : Read
+       run: |
+        Version=2.1.4
+        echo "version: $Version " >> $GITHUB_OUTPUT
+     - name: Verify
+       run: |
+         echo "${{steps.Read.outputs.version}}"
+  anotherConsumer:
+      runs-on: ubuntu-latest
+      needs: 
+      - Producer
+      - Consumer
+      steps:
+       - name: Read both Versions
+         run: |
+          echo "This is the version of Job1 ${{needs.Producer.outputs.version}}"
+          echo "This is the version of job2 ${{needs.Consumer.outputs.version}}"
 ```
 
 ---
