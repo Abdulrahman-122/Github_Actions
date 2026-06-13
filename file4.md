@@ -367,7 +367,7 @@ jobs:
 Producer:
 
 ```text
-VERSION=2.1.5
+VERSION=2.0.4
 ```
 
 ↓
@@ -375,7 +375,7 @@ VERSION=2.1.5
 Step Output:
 
 ```text
-version=2.1.5
+version=2.0.4
 ```
 
 ↓
@@ -400,7 +400,7 @@ Output:
 
 ```text
 Received version:
-2.1.5
+2.0.4
 ```
 
 ---
@@ -456,7 +456,7 @@ jobs:
 Creates:
 
 ```text
-VERSION=3.0.0
+VERSION=7.1.0
 ```
 
 inside GITHUB_ENV.
@@ -464,7 +464,7 @@ inside GITHUB_ENV.
 Creates:
 
 ```text
-version=3.0.0
+version=7.1.0
 ```
 
 inside GITHUB_OUTPUT.
@@ -480,7 +480,7 @@ ENV variable:
 NOT_FOUND
 
 Output variable:
-3.0.0
+7.1.0
 ```
 
 ---
