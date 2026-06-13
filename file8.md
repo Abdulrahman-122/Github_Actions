@@ -9,7 +9,7 @@ The key difference is:
 
 ---
 
-# 🧠 Why do we need Cache?
+#  Why do we need Cache?
 
 Imagine this workflow:
 
