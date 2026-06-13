@@ -561,7 +561,6 @@ jobs:
 
 
 ```
-
 # Final Challenge
 
 Create a workflow that prints:
@@ -571,4 +570,38 @@ Create a workflow that prints:
 3. Repository secret `API_KEY`
 4. Version output from a previous job
 
+'''yaml
+name: Challange_actor_proname_APIkey_version_from_previous_output
 
+on:
+  push:
+    branches:
+      - main 
+      - features/api
+jobs:
+  Backend:
+    runs-on: ubuntu-latest
+    env:
+      Project: ${{vars.Project_name}}
+      Api_key: ${{secrets.Api_Key}}
+    outputs:
+      Version: ${{steps.gen.outputs.versin }}
+    steps:
+      - name: check_info
+        id: gen
+        run: |
+          echo "Actor:${{ github.actor }}"
+          echo "Actor:$Project  "
+          echo "Actor:$Api_key "
+          echo "version=$Version">>$GITHUB_OUTPUT
+  Frontend:
+    runs-on: ubuntu-latest
+    needs:
+      - Backend
+    steps:
+      - name: varify
+        run: | 
+          echo "Let's check version of the last job"
+          echo "version of last job is ${{ needs.Backend.outputs.version }}"
+
+'''
