@@ -315,5 +315,43 @@ Job 2:
 - Print its contents
 - Show ls -la
 ```
+```yaml
+name: Create_artifact
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: create_file
+        run: |
+          echo "Hello from yml ">>student.txt
+          echo $date >> student.txt
+      - name: upload_filee
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stu_file
+          path: student.txt
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download_file
+        uses: actions/download-artifact@v5
+        with:
+          name: Stu_file
+      - name: more_info
+        run: |
+          uname -a
+          ls -R
+          echo "Operation done"
+
+  
+
+```
+
+
+
 
 If you can do that without looking at my solution, you've understood artifacts correctly.
