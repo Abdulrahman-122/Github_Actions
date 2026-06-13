@@ -434,12 +434,49 @@ uses: actions/cache@v4
 ```yaml
 ${{ steps.cache-demo.outputs.cache-hit }}
 ```
+```yml
+name: Flask_dependency_cache
+on:
+  workflow_dispatch: 
+
+jobs:
+  Create_cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check-cache
+        id: check-cache
+        uses: actions/cache@v4
+        with:
+          path: check-cache
+          key:  cache-v2
+      - name: generate-cache
+        if: steps.check-cache.outputs.cache-hit !='true'
+        run: |
+          echo "Cache Miss"
+          mkdir -p check-cache
+          echo "hello from flask this cache is new" >>check-cache/output.txt
+          date >>check-cache/output.txt
+      - name: save-cache
+        if: steps.check-cache.outputs.cache-hit !='true'
+        uses: actions/cache@v4
+        with:
+          path: check-cache
+          key: cache-v2
+      - name: verify-cache
+        run: |
+          echo "Welcome from new cache"
+          echo "After doing that step you will notice the phase of creating new caches will be closed  "
+          cat check-cache/output.txt
+          echo "${{steps.check-cache.outputs.cache-hit}}"
+
+
+```
 
 Run it twice and tell me:
 
 ```text
-What did the first run show?
-What did the second run show?
+What did the first run show? it run creating new cache and run not found cache so it created new one
+What did the second run show? it just run the one that he created before and disable the button of creating new one
 ```
 
 Then we'll move to matrices and conditional jobs, which are some of the most powerful GitHub Actions features.
