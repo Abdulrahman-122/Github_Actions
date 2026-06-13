@@ -570,7 +570,7 @@ Create a workflow that prints:
 3. Repository secret `API_KEY`
 4. Version output from a previous job
 
-'''yaml
+```yaml
 name: Challange_actor_proname_APIkey_version_from_previous_output
 
 on:
@@ -604,4 +604,4 @@ jobs:
           echo "Let's check version of the last job"
           echo "version of last job is ${{ needs.Backend.outputs.version }}"
 
-'''
+```
