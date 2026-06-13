@@ -537,7 +537,39 @@ Host OS
 Container OS
 Runner Metadata
 ```
-
+```yaml
+name: Build_VM_linux_windows_container
+on:
+  push:
+    branches:
+      - main
+jobs:
+  linux_machine:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "${{ runner.os }}"
+          echo "${{ runner.arch }}"
+          echo "${{ runner.name }}"
+  widnows_machine:
+    runs-on: windows-latest
+    steps:
+      - shell: pwsh
+        run: |
+          echo "${{ runner.os }}"
+          echo "${{ runner.arch }}"
+          echo "${{ runner.name }}"
+  container_machine:
+    runs-on: ubuntu-latest
+    container: 
+      image: alpine:3.20
+    steps:
+      - run: |
+          echo "${{ runner.os }}"
+          echo "${{ runner.arch }}"
+          echo "${{ runner.name }}"
+          cat /etc/os-release
+```
 Once you've done that, you'll understand the relationship between:
 
 ```text
@@ -550,4 +582,4 @@ VM
 Container
 ```
 
-which is a foundational concept for CI/CD and DevOps.
+
