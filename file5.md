@@ -139,6 +139,7 @@ jobs:
           echo "$API_KEY"
 ```
 
+but now as you see github will masked it as it wants to prevent any secret key to be allowed in logs
 ---
 
 ### Prediction
