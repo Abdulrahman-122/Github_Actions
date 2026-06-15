@@ -1,565 +1,319 @@
-This is one of the most important GitHub Actions concepts because it answers:
+Absolutely. The biggest confusion is that **reusable workflows are not actions**.
 
-> "When should I create a Composite Action and when should I create a Reusable Workflow?"
+You just learned:
+
+* Composite Action = reusable **steps**
+* Reusable Workflow = reusable **jobs/pipeline**
+
+Think of it like this:
+
+```text
+Composite Action
+└── Step 1
+└── Step 2
+└── Step 3
+
+Reusable Workflow
+└── Job A
+└── Job B
+└── Job C
+```
 
 ---
 
-# Think of it like Python
+# Step 1: Create the reusable workflow
 
-## Composite Action = Function
+Create:
 
-Python:
-
-```python
-def greet(name):
-    print(f"Hello {name}")
+```text
+.github/workflows/reusable-node.yml
 ```
 
-Usage:
-
-```python
-greet("Abdulrahman")
-```
-
----
-
-GitHub:
+Contents:
 
 ```yaml
-uses: ./.github/actions/greet
-with:
-  name: Abdulrahman
-```
+name: Reusable Node Workflow
 
-A composite action is basically a reusable function.
-
----
-
-## Reusable Workflow = Entire Program
-
-Python:
-
-```python
-def deploy_pipeline():
-    build()
-    test()
-    deploy()
-```
-
-Usage:
-
-```python
-deploy_pipeline()
-```
-
----
-
-GitHub:
-
-```yaml
-jobs:
-  deploy:
-    uses: ./.github/workflows/deploy.yml
-```
-
-A reusable workflow is basically a reusable pipeline.
-
----
-
-# Step 1: The Reusable Workflow
-
-Normal workflow:
-
-```yaml
 on:
-  push:
-```
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
 
-runs when code is pushed.
+jobs:
+  node-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print Node Version
+        run: echo "Requested Node Version = ${{ inputs.node-version }}"
+```
 
 ---
 
-Reusable workflow:
+## What is happening?
+
+This:
 
 ```yaml
 on:
   workflow_call:
 ```
 
-This means:
+means:
 
-> "Don't run me directly. Another workflow must call me."
+> "Nobody runs me directly. Another workflow must call me."
 
-Like:
+Similar to a function in programming:
 
 ```python
-def deploy():
+def greet(name):
+    print(name)
 ```
 
-The function exists but does nothing until called.
+The function waits until someone calls it.
 
 ---
 
-# Step 2: Inputs
+# Step 2: Create the caller workflow
+
+Create:
+
+```text
+.github/workflows/main.yml
+```
+
+Contents:
 
 ```yaml
-inputs:
-  foo:
-    required: true
-    type: string
-```
+name: Main Workflow
 
-Equivalent Python:
+on:
+  workflow_dispatch:
 
-```python
-def deploy(foo):
-```
+jobs:
+  call-reusable:
+    uses: ./.github/workflows/reusable-node.yml
 
-Caller must pass:
-
-```yaml
-with:
-  foo: bar
-```
-
----
-
-Another input:
-
-```yaml
-environment:
-```
-
-Equivalent:
-
-```python
-def deploy(environment):
-```
-
-Caller chooses:
-
-```yaml
-with:
-  environment: staging
-```
-
-or
-
-```yaml
-with:
-  environment: production
+    with:
+      node-version: "20"
 ```
 
 ---
 
-# Step 3: Secrets
+# What happens?
 
-Reusable workflow:
+You click:
 
-```yaml
-secrets:
-  EXAMPLE_REPOSITORY_SECRET:
-    required: true
+```text
+Actions
+└── Main Workflow
+      └── Run Workflow
 ```
 
-Equivalent:
+GitHub executes:
 
-```python
-def deploy(secret):
+```text
+main.yml
+   ↓
+reusable-node.yml
+   ↓
+node-job
 ```
 
-The caller must send the secret.
+Output:
+
+```text
+Requested Node Version = 20
+```
 
 ---
 
-# Step 4: The Job
+# Why is this different from composite actions?
 
-Inside reusable workflow:
+## Composite Action
+
+You call it inside a step:
+
+```yaml
+steps:
+  - uses: ./actions/node-ci
+```
+
+because it is just a group of steps.
+
+---
+
+## Reusable Workflow
+
+You call it inside a job:
 
 ```yaml
 jobs:
-  reusable-workflow-job:
+  call-reusable:
+    uses: ./.github/workflows/reusable-node.yml
 ```
 
-This is a normal job.
-
-Nothing special.
+because it contains entire jobs.
 
 ---
 
-# Step 5: Environment
+# Let's extend the lab
 
-This line is powerful:
-
-```yaml
-environment: ${{ inputs.environment }}
-```
-
-Suppose GitHub has:
-
----
-
-Staging Environment
+Imagine a company wants every project to run:
 
 ```text
-DATABASE_URL=staging-db
-API_KEY=staging-key
+Checkout
+Lint
+Test
+Build
 ```
 
----
+They don't want developers changing it.
 
-Production Environment
-
-```text
-DATABASE_URL=prod-db
-API_KEY=prod-key
-```
-
----
-
-Caller:
+Create:
 
 ```yaml
-environment: staging
+name: Company CI
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        required: true
+        type: string
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: echo "Testing ${{ inputs.project-name }}"
+      - run: echo "Linting..."
+      - run: echo "Running tests..."
+      - run: echo "Building..."
 ```
 
-loads staging secrets.
-
----
-
-Caller:
+Then any repository can use:
 
 ```yaml
-environment: production
+jobs:
+  company-ci:
+    uses: ./.github/workflows/company-ci.yml
+
+    with:
+      project-name: frontend
 ```
 
-loads production secrets.
-
 ---
 
-Same workflow.
+# What about secrets?
 
-Different credentials.
-
----
-
-# Step 6: Why use environments?
-
-Imagine deployment.
-
-Bad:
+Suppose your reusable workflow needs:
 
 ```yaml
-deploy-staging.yml
-deploy-production.yml
+secrets:
+  DOCKER_PASSWORD:
+    required: true
 ```
 
-Duplicate code.
-
----
-
-Better:
+inside:
 
 ```yaml
-deploy.yml
+on:
+  workflow_call:
 ```
 
-Input:
-
-```yaml
-environment
-```
-
-Choose staging or production.
-
----
-
-# Step 7: Using Inputs
-
-Inside workflow:
-
-```yaml
-FOO: ${{ inputs.foo }}
-```
-
-Caller:
-
-```yaml
-foo: bar
-```
-
-Result:
-
-```bash
-FOO=bar
-```
-
-Then:
-
-```bash
-echo $FOO
-```
-
-prints:
-
-```text
-bar
-```
-
----
-
-# Step 8: Using Secrets
-
-```yaml
-EXAMPLE_REPOSITORY_SECRET: ${{ secrets.EXAMPLE_REPOSITORY_SECRET }}
-```
-
-Same concept.
-
-GitHub injects the secret.
-
----
-
-# Step 9: Caller Workflow
-
-Now comes the magic.
-
----
-
-Reusable workflow:
-
-```text
-.github/workflows/deploy.yml
-```
-
-Caller:
+Then the caller passes:
 
 ```yaml
 jobs:
   deploy:
     uses: ./.github/workflows/deploy.yml
-```
 
-Notice:
-
-```yaml
-uses:
-```
-
-inside jobs.
-
-Not inside steps.
-
-This is the biggest difference.
-
----
-
-Composite Action:
-
-```yaml
-steps:
-  - uses: ...
-```
-
-Reusable Workflow:
-
-```yaml
-jobs:
-  deploy:
-    uses: ...
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
 
 ---
 
-# Visual Difference
+# Real-world example
 
-Composite Action
+Imagine you're a DevOps engineer.
 
-```yaml
-Job
- ├── Step 1
- ├── Step 2
- └── Composite Action
-       ├── Step A
-       └── Step B
-```
-
-Runs inside a step.
-
----
-
-Reusable Workflow
-
-```yaml
-Caller Workflow
- ├── Job A
- ├── Job B
- └── Reusable Workflow
-        ├── Job X
-        ├── Job Y
-        └── Job Z
-```
-
-Runs entire jobs.
-
----
-
-# Step 10: secrets: inherit
-
-This line:
-
-```yaml
-secrets: inherit
-```
-
-means:
-
-> "Pass all available secrets to the reusable workflow."
-
-Without it:
-
-```yaml
-secrets:
-  EXAMPLE_REPOSITORY_SECRET: ${{ secrets.EXAMPLE_REPOSITORY_SECRET }}
-```
-
-you must manually forward every secret.
-
----
-
-Example:
-
-Caller has:
-
-```text
-DB_PASSWORD
-API_KEY
-JWT_SECRET
-```
-
----
-
-Using:
-
-```yaml
-secrets: inherit
-```
-
-all 3 are available.
-
----
-
-Without:
-
-```yaml
-secrets:
-```
-
-you must specify each one.
-
----
-
-# Why SHA is used here?
-
-Relative path:
-
-```yaml
-uses: ./.github/workflows/deploy.yml
-```
-
-Uses current repository version.
-
----
-
-Cross repository:
-
-```yaml
-uses: owner/repo/.github/workflows/deploy.yml@f2d2e4a
-```
-
-Uses exact commit.
-
-Security.
-
-Same reason you learned:
-
-```yaml
-actions/checkout@ff7abcd...
-```
-
-instead of:
-
-```yaml
-actions/checkout@v5
-```
-
----
-
-# Real DevOps Example
-
-Imagine 30 repositories.
-
-Each one needs:
-
-```text
-Checkout
-Run Tests
-Build Docker Image
-Push Docker Image
-Deploy Kubernetes
-```
+You manage 30 repositories.
 
 Without reusable workflows:
 
 ```text
-repo1 -> 100 lines
-repo2 -> 100 lines
-repo3 -> 100 lines
+repo1
+  ci.yml
+
+repo2
+  ci.yml
+
+repo3
+  ci.yml
+
 ...
-repo30 -> 100 lines
+repo30
+  ci.yml
 ```
 
-3000 lines duplicated.
+Every repo duplicates the same pipeline.
 
 ---
 
-With reusable workflow:
+With reusable workflows:
 
 ```text
-deploy.yml
+central-ci.yml
 ```
 
-contains everything once.
-
----
-
-Every repo:
+All repositories use:
 
 ```yaml
 jobs:
-  deploy:
-    uses: company/shared-pipelines/.github/workflows/deploy.yml@sha
+  ci:
+    uses: company/platform/.github/workflows/central-ci.yml@main
 ```
 
-Done.
+Now changing one file updates CI for every repository.
 
 ---
 
-# Interview Question
+# Rule of thumb
 
-If somebody asks:
+Use a **Composite Action** when:
 
-> When should I use Composite Actions vs Reusable Workflows?
+```text
+I want to reuse steps.
+```
 
-Answer:
+Example:
 
-| Use Case                         | Choose            |
-| -------------------------------- | ----------------- |
-| Reuse a few steps                | Composite Action  |
-| Reuse an entire CI/CD pipeline   | Reusable Workflow |
-| Runs inside a step               | Composite Action  |
-| Runs as a job                    | Reusable Workflow |
-| Docker login helper              | Composite Action  |
-| Company-wide deployment pipeline | Reusable Workflow |
+```text
+Install Node
+Run Tests
+Upload Report
+```
 
-For someone heading toward DevOps, you'll likely create **many composite actions** (Docker build, Helm deploy, security scan) and a few **reusable workflows** (standard CI pipeline, Kubernetes deployment pipeline, release pipeline) that all repositories share.
+---
+
+Use a **Reusable Workflow** when:
+
+```text
+I want to reuse entire jobs/pipelines.
+```
+
+Example:
+
+```text
+Build
+Test
+Deploy
+Security Scan
+```
+
+That's the exact distinction this lab is trying to teach. Composite actions are reusable building blocks; reusable workflows are reusable pipelines.
