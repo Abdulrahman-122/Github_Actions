@@ -1,97 +1,108 @@
-Now we're entering the **most powerful way to create GitHub Actions**.
+This lesson is teaching something very different from composite actions.
 
-Up until now:
-
-* Composite Actions = shell scripts packaged together
-* Reusable Workflows = entire pipelines
-
-Now:
-
-* JavaScript/TypeScript Actions = actual programs
-
----
-
-# Why do JavaScript Actions exist?
-
-Imagine you want an action that:
-
-* Calls GitHub API
-* Reads pull requests
-* Creates issues
-* Parses JSON
-* Talks to AWS
-* Makes HTTP requests
-* Calculates stuff
-
-Doing this in Bash becomes painful.
-
-Instead:
-
-```javascript
-const response = await fetch(...)
-```
-
-Much easier.
-
----
-
-# Think Like This
-
-Composite Action:
-
-```yaml
-steps:
-  - run: docker build .
-  - run: docker push .
-```
-
-Mostly shell commands.
-
----
-
-JavaScript Action:
-
-```javascript
-const prs = await github.rest.pulls.list(...)
-```
-
-Actual programming.
-
----
-
-# Folder Structure
-
-A typical JavaScript Action:
+Up until now you've built:
 
 ```text
-my-action/
-│
-├── action.yml
-├── package.json
-├── src/
-│   └── index.ts
-│
-└── dist/
-    └── index.js
+Workflow
+ └── Composite Action
+       └── Bash commands
+```
+
+Now you're building:
+
+```text
+Workflow
+ └── JavaScript/TypeScript Action
+       └── Node.js code
+```
+
+The action itself is a Node application.
+
+---
+
+# Why JavaScript Actions exist
+
+Composite actions are great when you only need:
+
+```yaml
+- run: npm install
+- run: npm test
+```
+
+But what if you need logic?
+
+For example:
+
+```text
+Read input
+Validate it
+Call GitHub API
+Create issue
+Return output
+```
+
+Bash becomes messy.
+
+That's where JavaScript actions shine.
+
+---
+
+# Let's rebuild the lab from scratch
+
+## Goal
+
+Create an action that:
+
+```text
+Input:
+  milliseconds
+
+Behavior:
+  Waits N milliseconds
+
+Output:
+  Current time
 ```
 
 ---
 
-# action.yml
+# Project Structure
+
+```text
+.github/
+actions/
+  wait-action/
+    action.yml
+    package.json
+    src/
+      index.ts
+      wait.ts
+    dist/
+      index.js
+```
+
+---
+
+# Step 1: action.yml
+
+This describes the action to GitHub.
 
 ```yaml
 name: Wait Timer
 
 inputs:
   milliseconds:
+    description: Duration to wait
     required: true
+
+outputs:
+  time:
+    description: Current time
 
 runs:
   using: node20
   main: dist/index.js
 ```
-
-GitHub reads this.
 
 ---
 
@@ -102,482 +113,269 @@ runs:
   using: node20
 ```
 
-Means:
+means:
 
-> "Run this action with Node.js."
+> Run my action using Node.js version 20.
 
-Just like:
+Unlike:
 
-```bash
-python app.py
+```yaml
+runs:
+  using: composite
 ```
 
-or
-
-```bash
-node index.js
-```
-
-GitHub will run:
-
-```bash
-node dist/index.js
-```
-
-behind the scenes.
+which executes bash steps.
 
 ---
 
-# main
+And:
 
 ```yaml
 main: dist/index.js
 ```
 
-Equivalent to:
+means:
 
-```bash
-node dist/index.js
+> Start execution from dist/index.js.
+
+Like Python:
+
+```python
+python main.py
 ```
-
-GitHub starts execution from this file.
 
 ---
 
-# Reading Inputs
+# Step 2: wait.ts
 
-Workflow:
+```ts
+export function wait(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+```
+
+---
+
+What does it do?
+
+If:
+
+```ts
+await wait(3000)
+```
+
+the program pauses for 3 seconds.
+
+---
+
+# Step 3: index.ts
+
+```ts
+import * as core from "@actions/core";
+import { wait } from "./wait.js";
+
+export async function run(): Promise<void> {
+  try {
+    const ms = core.getInput("milliseconds");
+
+    core.info(`Waiting ${ms} milliseconds`);
+
+    await wait(parseInt(ms, 10));
+
+    core.setOutput("time", new Date().toTimeString());
+  } catch (error) {
+    if (error instanceof Error) {
+      core.setFailed(error.message);
+    }
+  }
+}
+
+run();
+```
+
+---
+
+# Understanding the GitHub API
+
+This line:
+
+```ts
+const ms = core.getInput("milliseconds");
+```
+
+reads:
 
 ```yaml
-- uses: ./wait-action
-  with:
-    milliseconds: 5000
+with:
+  milliseconds: 3000
 ```
+
+from the workflow.
 
 ---
 
-Inside action:
+This line:
 
-```typescript
-const ms = core.getInput("milliseconds")
+```ts
+core.info("hello");
 ```
 
-Gets:
-
-```text
-5000
-```
-
----
-
-Think:
-
-Workflow:
-
-```yaml
-milliseconds: 5000
-```
-
-↓
-
-Action:
-
-```typescript
-core.getInput("milliseconds")
-```
-
-↓
-
-Returns:
-
-```text
-5000
-```
-
----
-
-# @actions/core
-
-This package is GitHub's SDK.
-
-Install:
-
-```bash
-npm install @actions/core
-```
-
----
-
-Without it:
-
-```javascript
-console.log("hello")
-```
-
----
-
-With it:
-
-```javascript
-core.info("hello")
-```
-
-GitHub understands it.
-
----
-
-# Logging
-
-Normal JS:
-
-```javascript
-console.log("hello")
-```
-
----
-
-GitHub way:
-
-```javascript
-core.info("hello")
-```
-
-Produces:
+prints:
 
 ```text
 hello
 ```
 
-inside workflow logs.
+inside GitHub Actions logs.
 
 ---
 
-# Debug Logs
+This line:
 
-```typescript
-core.debug("Waiting...")
+```ts
+core.setOutput("time", ...)
 ```
 
-Only appears when debug mode enabled.
+creates an output.
 
-Useful when troubleshooting.
+Equivalent concept:
 
----
-
-Example:
-
-```typescript
-core.debug(`Waiting ${ms}`)
-```
-
-Output:
-
-```text
-Waiting 5000
+```python
+return value
 ```
 
 ---
 
-# Wait Function
+This line:
 
-```typescript
-await wait(parseInt(ms,10))
+```ts
+core.setFailed(...)
 ```
 
-Suppose:
+marks the action as failed.
 
-```typescript
-ms = 5000
-```
+Equivalent:
 
-Then:
-
-```typescript
-await wait(5000)
-```
-
-Action sleeps 5 seconds.
-
----
-
-Equivalent Bash:
-
-```bash
-sleep 5
+```python
+raise Exception()
 ```
 
 ---
 
-# Outputs
+# Step 4: package.json
 
-Very important.
-
-Action:
-
-```typescript
-core.setOutput(
-  "time",
-  new Date().toTimeString()
-)
-```
-
-Creates output:
-
-```text
-time=14:32:10
-```
-
----
-
-Workflow:
-
-```yaml
-- id: wait
-  uses: ./wait-action
-```
-
-Later:
-
-```yaml
-- run: |
-    echo "${{ steps.wait.outputs.time }}"
-```
-
-Output:
-
-```text
-14:32:10
-```
-
----
-
-# Error Handling
-
-```typescript
-try {
-   ...
-}
-catch(error) {
-   core.setFailed(error.message)
-}
-```
-
-If action crashes:
-
-```typescript
-throw new Error("Database failed")
-```
-
-GitHub marks workflow:
-
-```text
-❌ FAILED
-```
-
-instead of silently continuing.
-
----
-
-# Why TypeScript?
-
-TypeScript:
-
-```typescript
-const ms: string =
-    core.getInput("milliseconds")
-```
-
----
-
-JavaScript:
-
-```javascript
-const ms =
-    core.getInput("milliseconds")
-```
-
----
-
-TypeScript catches mistakes.
-
-Example:
-
-```typescript
-const x:number = "hello"
-```
-
-Compiler:
-
-```text
-Error!
-```
-
-before publishing.
-
----
-
-# Why Build Dist Folder?
-
-GitHub cannot run:
-
-```typescript
-src/index.ts
-```
-
-directly.
-
-It only understands:
-
-```javascript
-dist/index.js
-```
-
----
-
-So:
-
-```bash
-npm run package
-```
-
-does:
-
-```text
-TypeScript
-     ↓
-Compile
-     ↓
-JavaScript
-     ↓
-dist/index.js
-```
-
----
-
-# Three Versions Mentioned
-
-## Version 1
-
-No Build
-
-```text
-action/
- ├─ index.js
- └─ node_modules/
-```
-
-Commit everything.
-
-Works.
-
-Bad practice.
-
-Huge repository.
-
----
-
-## Version 2
-
-JavaScript + Build
-
-```text
-src/index.js
-dist/index.js
-```
-
-Build before publishing.
-
-Better.
-
----
-
-## Version 3
-
-TypeScript + Build
-
-```text
-src/index.ts
-```
-
-↓
-
-```bash
-npm run package
-```
-
-↓
-
-```text
-dist/index.js
-```
-
-Best practice.
-
-Most professional actions use this.
-
----
-
-# Real DevOps Example
-
-Suppose you create an action:
-
-```yaml
-- uses: company/check-k8s
-```
-
-Inside TypeScript:
-
-```typescript
-const pods =
- await k8s.listPods()
-
-if (pods.some(p => p.status !== "Running"))
+```json
 {
-   core.setFailed(
-      "Cluster unhealthy"
-   )
+  "name": "wait-action",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@actions/core": "^1.11.0"
+  }
 }
 ```
 
-Now every repository can reuse it.
+Install:
 
----
-
-# When Should You Use This?
-
-As a DevOps engineer:
-
-### Use Composite Action
-
-When:
-
-```text
-docker build
-docker push
-kubectl apply
-```
-
-Simple shell commands.
-
----
-
-### Use JavaScript/TypeScript Action
-
-When:
-
-```text
-Call GitHub API
-Read PRs
-Create Issues
-Parse JSON
-Interact with cloud APIs
-Custom logic
+```bash
+npm install
 ```
 
 ---
 
-A useful rule:
+# Step 5: Build
 
-**80% of DevOps automation can be done with Composite Actions and Reusable Workflows.**
+TypeScript cannot run directly.
 
-You usually reach for **JavaScript/TypeScript Actions** when you want to build something that feels like a real GitHub product or tool rather than just a sequence of shell commands.
+GitHub executes:
+
+```text
+dist/index.js
+```
+
+not:
+
+```text
+src/index.ts
+```
+
+So you compile:
+
+```bash
+npm run package
+```
+
+or:
+
+```bash
+npx tsc
+```
+
+depending on project setup.
+
+This creates:
+
+```text
+dist/index.js
+```
+
+---
+
+# Step 6: Workflow
+
+```yaml
+name: Test JS Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: wait
+        uses: ./actions/wait-action
+        with:
+          milliseconds: 3000
+
+      - run: echo "${{ steps.wait.outputs.time }}"
+```
+
+---
+
+# Execution Flow
+
+```text
+Workflow starts
+       │
+       ▼
+Checkout repo
+       │
+       ▼
+Load action.yml
+       │
+       ▼
+Node 20 starts
+       │
+       ▼
+Execute dist/index.js
+       │
+       ▼
+Read milliseconds input
+       │
+       ▼
+Wait 3 seconds
+       │
+       ▼
+Set output "time"
+       │
+       ▼
+Workflow prints output
+```
+
+---
