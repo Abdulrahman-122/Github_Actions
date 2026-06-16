@@ -220,7 +220,66 @@ appears.
 This is useful for troubleshooting.
 
 ---
+Minimal working workflow example
 
+Create:
+
+.github/workflows/debug-demo.yml
+⚙️ Workflow
+name: Debug Mode Test
+
+on:
+  push:
+
+jobs:
+  debug-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Print debug logs
+        run: |
+          echo "::debug::Starting debug test"
+          echo "::debug::Current directory is $(pwd)"
+          echo "::debug::List files:"
+          ls -la
+          echo "::debug::User is $(whoami)"
+
+      - name: Normal log
+        run: |
+          echo "This is always visible"
+🔥 What happens NOW
+❌ If variable NOT set
+
+You will see ONLY:
+
+This is always visible
+
+All ::debug:: lines are hidden.
+
+✅ If you set:
+ACTIONS_STEP_DEBUG = true
+
+Now GitHub will show:
+
+Debug: Starting debug test
+Debug: Current directory is /home/runner/work/...
+Debug: List files:
+...
+Debug: User is runner
+🧠 Important concept
+
+GitHub has two debug systems:
+
+Type	Variable
+Step debug logs	ACTIONS_STEP_DEBUG
+Runner system logs	ACTIONS_RUNNER_DEBUG
+
+You just used:
+
+ACTIONS_STEP_DEBUG
 # Lab 6: Passing Data Between Steps
 
 This is the most important workflow command.
