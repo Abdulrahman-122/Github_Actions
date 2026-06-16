@@ -537,6 +537,18 @@ Here are labs in increasing difficulty.
 # 🧪 Lab 1 — Greeting Action (Beginner)
 
 ## Goal
+in order to build it
+- just copy first folder that contiain everything and start remove
+- index.ts
+- dist files
+- then add new  index.ts file as rollup file when you run ; npm run build
+-  and then add new action.yml
+-  then add workflow at the .github/workflows folder
+-  then push your changes
+-  then test workflow.
+-  you did it
+
+
 
 Build a JavaScript action that:
 
@@ -599,6 +611,162 @@ with:
 ```text id="9ej03u"
 Hello Abdulrahman!
 ```
+If you have:
+
+Greeting Action
+Wait Action
+Age Validator Action
+
+Create:
+
+actions/
+├── greeting-action/
+│   ├── action.yml
+│   ├── package.json
+│   ├── src/
+│   └── dist/
+│
+├── wait-action/
+│   ├── action.yml
+│   ├── package.json
+│   ├── src/
+│   └── dist/
+│
+└── age-validator/
+    ├── action.yml
+    ├── package.json
+    ├── src/
+    └── dist/
+
+Then your workflow can call any of them.
+
+how you will build it ;
+For that lab, your `index.ts` can be very small. The goal is:
+
+Input:
+
+```yaml id="4odm2j"
+with:
+  name: Abdulrahman
+```
+
+Output in logs:
+
+```text id="7j6v7g"
+Hello Abdulrahman!
+```
+
+---
+
+## action.yml
+
+```yaml id="v8um1m"
+name: Greeting Action
+
+inputs:
+  name:
+    description: Person to greet
+    required: true
+
+runs:
+  using: node20
+  main: dist/index.js
+```
+
+---
+
+## src/index.ts
+
+```ts id="om0j49"
+import * as core from "@actions/core";
+
+export async function run(): Promise<void> {
+  try {
+    const name = core.getInput("name");
+
+    core.info(`Hello ${name}!`);
+  } catch (error) {
+    if (error instanceof Error) {
+      core.setFailed(error.message);
+    }
+  }
+}
+
+run();
+```
+
+---
+
+## How it works
+
+This line:
+
+```ts id="x64lc7"
+const name = core.getInput("name");
+```
+
+reads the value from:
+
+```yaml id="9r4r1v"
+with:
+  name: Abdulrahman
+```
+
+So now:
+
+```ts id="vhm8ze"
+name
+```
+
+contains:
+
+```text id="zgx06d"
+Abdulrahman
+```
+
+---
+
+This line:
+
+```ts id="4s5bhn"
+core.info(`Hello ${name}!`);
+```
+
+prints:
+
+```text id="cd8mx7"
+Hello Abdulrahman!
+```
+
+to the GitHub Actions logs.
+
+---
+
+## Test workflow
+
+```yaml id="a4es2w"
+name: Test Greeting Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./actions/greeting-action
+        with:
+          name: Abdulrahman
+```
+
+---
+
+
+
+
 
 ---
 
