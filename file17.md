@@ -11,7 +11,7 @@ Think of it like this:
 
 ---
 
-# Lab 1: What Problem Does Container Action Solve?
+#  What Problem Does Container Action Solve?
 
 Suppose you want an action that:
 
@@ -57,7 +57,7 @@ No dependency problems.
 
 ---
 
-# Lab 2: Anatomy of a Container Action
+#  Anatomy of a Container Action
 
 A Container Action normally contains:
 
@@ -142,7 +142,7 @@ python entrypoint.py Abdulrahman
 
 ---
 
-# Lab 3: Dockerfile
+#  Dockerfile
 
 Example:
 
@@ -173,7 +173,7 @@ behind the scenes.
 
 ---
 
-# Lab 4: Understanding entrypoint.py
+#  Understanding entrypoint.py
 
 ```python
 #!/usr/bin/env python3
@@ -229,7 +229,7 @@ Abdulrahman
 
 ---
 
-# Lab 5: Print Something
+#  Print Something
 
 ```python
 greeting = f"Hello, {name}"
@@ -288,7 +288,7 @@ produces:
 
 ---
 
-# Lab 7: Outputs
+#  Outputs
 
 This is the most important part.
 
@@ -325,7 +325,7 @@ GitHub stores it.
 
 ---
 
-# Lab 8: Consuming the Output
+#  Consuming the Output
 
 Workflow:
 
@@ -361,7 +361,7 @@ Hello Abdulrahman
 
 ---
 
-# Lab 9: Dynamic Build vs Prebuilt Image
+#  Dynamic Build vs Prebuilt Image
 
 ## Option 1
 
@@ -410,7 +410,7 @@ Cons:
 
 ---
 
-# Lab 10: What Happens During Execution?
+#  What Happens During Execution?
 
 When workflow runs:
 
@@ -520,4 +520,118 @@ In real companies, you'll probably write:
 * Container Actions → sometimes
 * JavaScript Actions → rarely unless building GitHub integrations
 
-A good next exercise is to build your own **Python Container Action** that accepts a name as input and returns the current UTC time as an output. That exercise combines Docker, Python, GitHub Actions inputs, outputs, and workflow commands all in one project.
+---
+Here are the **complete working files** for your lab. You can copy-paste them directly and it will work as a real GitHub Container Action.
+
+---
+
+#  1. `entrypoint.py`
+
+```python
+import os
+from datetime import datetime, timezone
+
+# Read input from GitHub Actions
+name = os.getenv("INPUT_WHO_TO_GREET", "World")
+
+# Get current UTC time
+now = datetime.now(timezone.utc)
+utc_time = now.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+# Build output message
+greeting = f"Hello {name}, current UTC time is {utc_time}"
+
+# Print GitHub notice
+print(f"::notice::Greeting generated successfully")
+
+# Write output to GitHub Actions output file
+with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+    f.write(f"greeting={greeting}\n")
+```
+
+---
+
+# 🐳 2. `Dockerfile`
+
+```dockerfile
+FROM python:3.12
+
+WORKDIR /app
+
+COPY entrypoint.py .
+
+# Make sure script runs
+ENTRYPOINT ["python", "entrypoint.py"]
+```
+
+---
+
+# 3. `action.yml`
+
+```yaml
+name: Python UTC Greeting Action
+
+description: Generates a greeting message with current UTC time
+
+inputs:
+  who-to-greet:
+    description: Name of the person to greet
+    required: true
+    default: World
+
+outputs:
+  greeting:
+    description: The generated greeting message
+
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ inputs.who-to-greet }}
+```
+
+---
+
+#  4. Example Workflow (`.github/workflows/test.yml`)
+
+```yaml
+name: Test Container Action
+
+on:
+  push:
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run Python Container Action
+        id: greet
+        uses: ./python-container-action
+        with:
+          who-to-greet: Abdulrahman
+
+      - name: Print output
+        run: echo "${{ steps.greet.outputs.greeting }}"
+```
+
+---
+
+#  What you should see in logs
+
+### GitHub notice:
+
+```
+::notice::Greeting generated successfully
+```
+
+### Output step:
+
+```
+Hello Abdulrahman, current UTC time is 2026-06-16 12:30:00 UTC
+```
+
+
