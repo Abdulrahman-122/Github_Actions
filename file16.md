@@ -617,6 +617,8 @@ Greeting Action
 Wait Action
 Age Validator Action
 
+```
+
 Create:
 
 actions/
@@ -637,6 +639,7 @@ actions/
     ├── package.json
     ├── src/
     └── dist/
+```
 
 Then your workflow can call any of them.
 
