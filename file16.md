@@ -495,6 +495,10 @@ then understand how action connected with index.js(compiled file from index.ts) 
 then run workflow
 but note; before you run the workflow -> just add some lines to index.ts then compile then push to github then test
 ```
+you will find the output here;
+https://github.com/Abdulrahman-122/cautious-pancake/actions/runs/27593383181
+
+
 ---
 
 # Execution Flow
@@ -823,7 +827,7 @@ Expected:
 ```text id="d4x5so"
 Hello Abdulrahman!
 ```
-
+you will find output here;https://github.com/Abdulrahman-122/cautious-pancake/actions/runs/27595227387/job/81584066906
 ---
 
 # 🧪 Lab 3 — Wait Timer (Course Lab)
