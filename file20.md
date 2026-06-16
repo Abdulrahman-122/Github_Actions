@@ -1,8 +1,5 @@
-Common Workflows
-
-In this module we explore some common workflow types and sketch out how to approach them.
-Linting and Static Analysis
-
+1. Linting and Static Analysis
+```
 A minimal lint workflow only needs to:
 
     Check out the repository code.
@@ -18,8 +15,10 @@ You can provide a much better experience with a few enhancements:
 Marketplace actions often save you from wiring up all of that logic by hand. GitHub's super-linter bundles dozens of linters and automatically scopes work to the files changed in the workflow run.
 
 The same pattern applies to other static analysis tools—check out the code, install the tool, run it, and then iterate on optimizations such as caching, incremental execution, or richer reporting.
-Testing Applications
+```
 
+2.Testing Applications
+```
 Testing workflows look similar to linting but introduce dependency management and artifact handling. A baseline pipeline:
 
     Checks out the repository code.
@@ -28,13 +27,16 @@ Testing workflows look similar to linting but introduce dependency management an
     Runs the test suite.
 
 Improvements include caching dependencies, uploading test reports for later inspection, and publishing coverage metrics. Marketplace actions like actions/setup-node or actions/setup-python handle installing language toolchains and wiring up built-in dependency caching.
-Building Artifacts
+```
 
+3.Building Artifacts
+```
 Build workflows extend the testing pipeline by producing deployable outputs. After checking out code and installing prerequisites, run the build command and publish the result to a package registry, artifact store, or release asset. Common post-build steps include attaching SBOMs, generating provenance attestations, or running container image scanning.
 
 When building containers, swap out the language toolchain for a container builder such as Docker, BuildKit, or docker/build-push-action. After the image is produced, push it to your registry of choice and optionally sign it with cosign or a similar tool.
+```
 Deploying Applications
-
+```
 Most deployment workflows start where the build leaves off—using the packaged artifact and promoting it into an environment.
 Push-Based Deployments
 
@@ -53,9 +55,10 @@ Scheduled workflows can label, comment on, and close inactive issues to keep bac
 Dependency Updates
 
 Automations like Dependabot or Renovate periodically check your manifest files for outdated dependencies, raise pull requests with the updates, and rely on your test workflows to validate them. For custom package managers, you can script this yourself: check out the repo, query for newer versions, update manifests, push a branch, and open a PR through the REST or GraphQL API.
-GitHub Provided Workflow Templates
-
+```
+note;
+```
 If you are unsure where to start, GitHub offers curated templates under Actions → New workflow.
 
 The suggestions are based on the languages and frameworks detected in your repository and provide a minimal but functional pipeline for tasks such as building Docker images or deploying to AWS Elastic Container Service. Use them for inspiration, then iterate with better authentication patterns (for example, swapping long-lived cloud credentials for OIDC federation), improved caching, and organization-specific conventions.
-  
+```
