@@ -411,7 +411,28 @@ Step A
   |
 Step B
 ```
+name: Test
 
+on:
+  workflow_dispatch:
+
+jobs:
+  Test_yml:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate tag
+        id: foo
+        run: |
+          echo "image_tag=v2.5.5" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        run: |
+          docker build -t myapp:${{ steps.foo.outputs.image_tag }} .
+
+      - name: Verify image
+        run: |
+          echo "Everything works well"
 ---
 
 # Lab 8: GITHUB_STATE
