@@ -246,7 +246,7 @@ appears in Actions logs.
 
 ---
 
-# Lab 6: GitHub Workflow Commands
+#  GitHub Workflow Commands
 
 This line:
 
