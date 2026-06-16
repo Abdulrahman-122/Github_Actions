@@ -67,22 +67,164 @@ Output:
 ---
 
 # Project Structure
-
-```text
-.github/
-actions/
-  wait-action/
-    action.yml
-    package.json
-    src/
-      index.ts
-      wait.ts
-    dist/
-      index.js
+```yml
+my-repo/
+├── devbox.json       <-- here
+├── .github/
+│   └── workflows/
+│       └── test.yml
+└── actions/
+    └── wait_action/
+        ├── action.yml
+        ├── package.json
+        ├── rollup.config.js
+        ├── tsconfig.json
+        ├── src/
+        │   ├── index.ts
+        │   └── wait.ts
+        └── dist/
 ```
-
 ---
+make the environment ;
+1.Devbox environment -> to isolate the project from the environment around it
+Create a devbox.json
+```
+Inside your project root:
 
+{
+  "packages": [
+    "nodejs@20"
+  ],
+
+  "shell": {
+    "init_hook": [
+      "echo 'Node development environment loaded'"
+    ]
+  }
+}
+
+Initialize:
+
+devbox shell
+
+Check:
+
+node --version
+npm --version
+
+```
+2.make package.json file;
+4. Recommended package.json
+```
+For your TypeScript GitHub Action:
+
+{
+  "name": "wait-action",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.0.0",
+    "rollup": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+
+Then inside Devbox:
+
+npm install
+npm run build
+
+```
+3. start compile ts files;
+```
+Install:
+
+npm install -D typescript
+Since the course uses Rollup
+
+Install:
+
+npm install -D rollup \
+  @rollup/plugin-commonjs \
+  @rollup/plugin-node-resolve \
+  @rollup/plugin-typescript
+Create tsconfig.json
+
+Example:
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Node",
+    "strict": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"]
+}
+Update package.json
+
+Add scripts:
+
+{
+  "name": "wait-action",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "...",
+    "@rollup/plugin-node-resolve": "...",
+    "@rollup/plugin-typescript": "...",
+    "rollup": "...",
+    "typescript": "..."
+  }
+}
+Create rollup.config.js
+
+The file you showed earlier:
+
+import commonjs from '@rollup/plugin-commonjs'
+import nodeResolve from '@rollup/plugin-node-resolve'
+import typescript from '@rollup/plugin-typescript'
+
+const config = {
+  input: 'src/index.ts',
+  output: {
+    file: 'dist/index.js',
+    format: 'es',
+    sourcemap: true
+  },
+  plugins: [
+    typescript(),
+    nodeResolve({ preferBuiltins: true }),
+    commonjs()
+  ]
+}
+
+export default config
+Build the action
+
+Run:
+
+npm run build
+
+This should create:
+
+dist/index.js
+```
 # Step 1: action.yml
 
 This describes the action to GitHub.
@@ -345,7 +487,14 @@ jobs:
 
       - run: echo "${{ steps.wait.outputs.time }}"
 ```
-
+``` yaml
+now after doing all of these setup
+1.build action.yml file
+2.build workflow file test
+then understand how action connected with index.js(compiled file from index.ts) that we compiled it into js file
+then run workflow
+but note; before you run the workflow -> just add some lines to index.ts then compile then push to github then test
+```
 ---
 
 # Execution Flow
